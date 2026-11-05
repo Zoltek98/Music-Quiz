@@ -1,0 +1,1 @@
+ALTER TABLE `Track` ADD COLUMN `coverArtUrl` VARCHAR(512) NULL;

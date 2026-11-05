@@ -1,0 +1,23 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: music-quiz-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_local_only
+      MYSQL_DATABASE: music_quiz
+      MYSQL_USER: music_quiz
+      MYSQL_PASSWORD: music_quiz_dev
+    ports:
+      - "3307:3306"
+    volumes:
+      - music_quiz_mysql:/var/lib/mysql
+      - ./docker/mysql-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  music_quiz_mysql:

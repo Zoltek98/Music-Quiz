@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model Room {
+  id             String    @id @default(cuid())
+  code           String    @unique @db.VarChar(8)
+  adminTokenHash String    @db.VarChar(128)
+  status         String    @default("lobby") @db.VarChar(24)
+  activeCategory Int?
+  activeTrack    Int?
+  currentPlayerId String?
+  buzzLocked     Boolean   @default(false)
+  isPlaying      Boolean   @default(false)
+  revealed       Boolean   @default(false)
+  lastResult     String?   @db.VarChar(24)
+  trackOutcomes  Json?
+  createdAt      DateTime  @default(now())
+  lastActivityAt DateTime  @default(now())
+  players        Player[]
+  category       Category? @relation(fields: [activeCategory], references: [id], onDelete: SetNull)
+  @@index([createdAt])
+  @@index([lastActivityAt])
+}
+
+model Player {
+  id        String   @id @default(cuid())
+  roomId    String
+  name      String   @db.VarChar(32)
+  score     Int      @default(0)
+  joinedAt  DateTime @default(now())
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  @@index([roomId])
+}
+
+model Category {
+  id      Int     @id @default(autoincrement())
+  name    String  @unique @db.VarChar(80)
+  tracks  Track[]
+  rooms   Room[]
+}
+
+model Track {
+  id              Int      @id @default(autoincrement())
+  categoryId      Int
+  slot            Int
+  title           String   @db.VarChar(160)
+  artist          String   @db.VarChar(160)
+  album           String?  @db.VarChar(160)
+  spotifyUri      String?  @db.VarChar(128)
+  coverArtUrl     String?  @db.VarChar(512)
+  previewUrl      String?  @db.VarChar(512)
+  clipStartMs     Int      @default(0)
+  clipLength      Int      @default(6)
+  category        Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  @@unique([categoryId, slot])
+}
